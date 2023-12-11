@@ -1,7 +1,9 @@
 import User from "../models/userModels.js";
-import cloudinary from "cloudinary"
-import AppError from "../utils/error.utils.js"
-import fs from "fs/promises"
+import cloudinary from "cloudinary";
+import AppError from "../utils/error.utils.js";
+import fs from "fs/promises";
+import sendEmail from "../utils/sendEmail.js";
+import crypto from "crypto"
 
 const home = (req, res) => {
   res.status(200).json({
@@ -63,7 +65,9 @@ const register = async (req, res, next) => {
         fs.rm(`uploads/${req.file.filename}`);
       }
     } catch (error) {
-      return next(new AppError(error || "File not uploaded, please try again", 400));
+      return next(
+        new AppError(error || "File not uploaded, please try again", 400)
+      );
     }
   }
 
@@ -147,8 +151,8 @@ const logOut = async (req, res) => {
       expiresIn: new Date(),
       httpOnly: true,
     };
-    
-    res.cookie("token", null, cookieOption)
+
+    res.cookie("token", null, cookieOption);
 
     res.status(200).json({
       success: true,
@@ -174,4 +178,106 @@ const getUser = async (req, res) => {
     return next(new AppError("Failed to fetched the user data"), 400);
   }
 };
-export { home, register, login,logOut, getUser };
+
+const forgetPassword = async (req, res, next) => {
+  const { email } = req.body;
+
+  //if user don't provide  email then send the
+  if (!email) {
+    return next(new AppError("Email is required!!!", 400));
+  }
+
+  //Match email in db
+  const user = await User.findOne({ email });
+
+  //if the email not matched in databases
+  if (!user) {
+    return next(new AppError("Email is not registerd!!!!", 400));
+  }
+
+  const resetToken = await user.generateResetToken();
+
+  // token ko save kar lo db me
+  await user.save();
+
+  const resetPasswordURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+  console.log(resetPasswordURL);
+
+  // We here need to send an email to the user with the token
+  const subject = "Reset Password";
+  const message = `You can reset your password by clicking <a href=${resetPasswordURL} target="_blank">Reset your password</a>\nIf the above link does not work for some reason then copy paste this link in new tab ${resetPasswordURL}.\n If you have not requested this, kindly ignore.`;
+
+  try {
+    await sendEmail(email, subject, message);
+
+    res.status(200).json({
+      success: true,
+      message: `Reset password token has been sent to ${email} successfully`,
+    });
+  } catch (error) {
+    //in case email send nhi huaa
+    user.forgotPasswordExpiry = undefined;
+    user.forgotPasswordToken = undefined;
+
+    await user.save();
+
+    return next(new AppError(error.message, 400));
+  }
+
+  
+};
+
+const resetPassword = async(req, res,next) => {
+  const { resetToken} = req.params
+
+  const {password} = req.body
+
+  const forgotPasswordToken = crypto
+  .createHash('sha256')
+  .update(resetToken)
+  .digest('hex')
+  
+  if(!password)
+  {
+    return next(new AppError('Password is required',401))
+  }
+
+  
+  // Checking if token matches in DB and if it is still valid(Not expired)
+  const user = await User.findOne({
+    forgotPasswordToken,
+    forgotPasswordExpiry : {$gt:Date.now()} // $gt will help us check for greater than value, with this we can check if token is valid or expired
+  })
+  if(!user)
+  {
+    return next(new AppError('Token is invalid or expired !!!',401))
+  }
+
+  // Update the password if token is valid and not expired
+  user.password = password
+
+  // making forgotPassword undefined in the DB after the updated the password
+  user.forgotPasswordExpiry = undefined
+  user.forgotPasswordToken = undefined
+  
+  // Save the updated user values
+  user.save()
+
+  res.status(200).json({
+    success:true,
+    message:"Password changed successfully !!!!"
+  })
+
+  
+};
+
+export {
+  home,
+  register,
+  login,
+  logOut,
+  getUser,
+  forgetPassword,
+  resetPassword,
+};

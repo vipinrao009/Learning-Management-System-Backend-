@@ -2,7 +2,6 @@ import { config } from "dotenv";
 config();
 import app from "./app.js";
 import cloudinary from "cloudinary";
-
 const PORT = process.env.PORT || 5400;
 
 //cloudinary configuration

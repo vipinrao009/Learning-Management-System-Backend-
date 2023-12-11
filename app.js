@@ -10,6 +10,8 @@ import errorMiddleware from "./middleware/error.middleware.js";
 
 app.use(express.json());
 app.use(cookieParser());
+//app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({extended:true}));
 app.use(
   cors({
     origin: [process.env.FRONTED_URL],
@@ -34,6 +36,3 @@ app.all("*", (req, res) => {
 app.use(errorMiddleware);
 
 export default app;
-
-
-
