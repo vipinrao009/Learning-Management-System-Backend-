@@ -3,7 +3,7 @@ import cloudinary from "cloudinary";
 import AppError from "../utils/error.utils.js";
 import fs from "fs/promises";
 import sendEmail from "../utils/sendEmail.js";
-import crypto from "crypto"
+import crypto from "crypto";
 
 const home = (req, res) => {
   res.status(200).json({
@@ -224,54 +224,94 @@ const forgetPassword = async (req, res, next) => {
 
     return next(new AppError(error.message, 400));
   }
-
-  
 };
 
-const resetPassword = async(req, res,next) => {
-  const { resetToken} = req.params
+const resetPassword = async (req, res, next) => {
+  const { resetToken } = req.params;
 
-  const {password} = req.body
+  const { password } = req.body;
 
   const forgotPasswordToken = crypto
-  .createHash('sha256')
-  .update(resetToken)
-  .digest('hex')
-  
-  if(!password)
-  {
-    return next(new AppError('Password is required',401))
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  if (!password) {
+    return next(new AppError("Password is required", 401));
   }
 
-  
   // Checking if token matches in DB and if it is still valid(Not expired)
   const user = await User.findOne({
     forgotPasswordToken,
-    forgotPasswordExpiry : {$gt:Date.now()} // $gt will help us check for greater than value, with this we can check if token is valid or expired
-  })
-  if(!user)
-  {
-    return next(new AppError('Token is invalid or expired !!!',401))
+    forgotPasswordExpiry: { $gt: Date.now() }, // $gt will help us check for greater than value, with this we can check if token is valid or expired
+  });
+  if (!user) {
+    return next(new AppError("Token is invalid or expired !!!", 401));
   }
 
   // Update the password if token is valid and not expired
-  user.password = password
+  user.password = password;
 
   // making forgotPassword undefined in the DB after the updated the password
-  user.forgotPasswordExpiry = undefined
-  user.forgotPasswordToken = undefined
-  
+  user.forgotPasswordExpiry = undefined;
+  user.forgotPasswordToken = undefined;
+
   // Save the updated user values
-  user.save()
+  user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password changed successfully !!!!",
+  });
+};
+
+const changePassword = async (req, res) => {
+  // Destructuring the necessary data from the req object
+  const { oldPassword, newPassword } = req.body;
+
+  const { id } = req.user.id; // because of the middleware isLoggedIn
+  
+  //compare the password
+  if (!oldPassword || !newPassword) {
+    return next(
+      new AppError("Old password and new password are required !!!", 401)
+    );
+  }
+
+  //findind the user by id and selecting the password
+  const validUser = await User.findOne({ id }).select("+password");
+
+  // user is not valid then send the response
+  if (!validUser) {
+    return next(new AppError("Invalid user id or user does not exist!!", 401));
+  }
+  
+  //Check the old password is correct
+  const isPasswordValid = await user.comparePassword(oldPassword)
+  
+  //if old password is not correct then send the response
+  if(!isPasswordValid)
+  {
+    return next(new AppError('Invalid old password!!',401))
+  }
+
+  // if old password is valid the update the password
+  user.password = newPassword
+  
+  //save the data in db
+  await user.save()
+  
+  // Setting the password undefined so that it won't get sent in the response
+  user.password = undefined
 
   res.status(200).json({
     success:true,
-    message:"Password changed successfully !!!!"
+    message:"Password is changed successfully!!"
   })
-
-  
 };
 
+
+//1 contrroller is left
 export {
   home,
   register,
@@ -280,4 +320,5 @@ export {
   getUser,
   forgetPassword,
   resetPassword,
+  changePassword,
 };
