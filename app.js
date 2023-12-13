@@ -6,7 +6,9 @@ import morgan from "morgan";
 
 import connectToDB from "./config/db.connection.js";
 import router from "./routers/userRouters.js";
+import course from "./routers/courseRouter.js";
 import errorMiddleware from "./middleware/error.middleware.js";
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -26,6 +28,7 @@ connectToDB();
 
 
 app.use("/", router);
+app.use("/",course)
 // 3 module are yet to write
 
 app.all("*", (req, res) => {
