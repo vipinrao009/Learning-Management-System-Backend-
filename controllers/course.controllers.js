@@ -1,8 +1,7 @@
 import Course from "../models/course.model.js";
 import AppError from "../utils/error.utils.js";
 import cloudinary from "cloudinary";
-import fs from "fs/promises"
-
+import fs from "fs/promises";
 
 const getAllCourses = async (req, res, next) => {
   const course = await Course.find({}).select("-lectures");
@@ -32,66 +31,92 @@ const getLectureByCourseId = async (req, res, next) => {
 
 const createCourse = async (req, res, next) => {
   // Destructuring the necessary data from req object
-  const { title,description,category,createdBy} = req.body
+  const { title, description, category, createdBy } = req.body;
 
   // Check if the data is there or not, if not throw error message
-  if(!title || !description || !category || !createdBy)
-  {
-    return next(new AppError("All fields are required!99!!",401))
+  if (!title || !description || !category || !createdBy) {
+    return next(new AppError("All fields are required!99!!", 401));
   }
-  
+
   // Create a new course with the given necessary data and save to DB
-  const course =await Course.create({
+  const course = await Course.create({
     title,
     description,
     category,
     createdBy,
-    thumbnail:{
-      public_id :'email',
-      secure_url:"dummy"
-    }
-  })
+    thumbnail: {
+      public_id: "email",
+      secure_url: "dummy",
+    },
+  });
 
-  if(!course)
-  {
-    return next(new AppError('Course could not created ,please try again',401))
+  if (!course) {
+    return next(
+      new AppError("Course could not created ,please try again", 401)
+    );
   }
 
-   try {
-    if(req.file)
-    { 
+  try {
+    if (req.file) {
       // //upload the file on cloudinary
-      const result = await cloudinary.v2.uploader.upload(req.file.path,{
-        folder:'lms' // Save files in a folder named lms
-      })
-  
-      if(result)
-      { 
+      const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        folder: "lms", // Save files in a folder named lms
+      });
+
+      if (result) {
         // Set the public_id and secure_url in DB
-        course.thumbnail.public_id = result.public_id
-        course.thumbnail.secure_url = result.secure_url
+        course.thumbnail.public_id = result.public_id;
+        course.thumbnail.secure_url = result.secure_url;
       }
-  
+
       // After successfully upload remove the file from local storage
-      fs.rm(`uploads/${req.file.filename}`)
-  
+      fs.rm(`uploads/${req.file.filename}`);
+
       await course.save();
-  
+
       res.status(200).json({
-        success:true,
-        message:"Course is successfully created!!!",
-        course
-      })
-  
+        success: true,
+        message: "Course is successfully created!!!",
+        course,
+      });
     }
-   } catch (error) {
-     return next(new AppError(error.message))
-   }
+  } catch (error) {
+    return next(new AppError(error.message));
+  }
 };
 
-const removeCourse = async (req, res, next) => {};
+const removeCourse = async (req, res, next) => {
 
-const updateCourse = async (req, res, next) => {};
+};
+
+const updateCourse = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    // finding the course using id
+    const course = await Course.findByIdAndUpdate(
+      id,
+      {
+        $set:req.body //this is only update the fields which are present and remain same (no update)
+      },
+      {
+        runValidators : true // this will run the validation checks on the new data that is right or wrong
+      }
+    );
+
+    if(!course)
+    {
+      return next(new AppError('course with given id does not exist !!!',401))
+    }
+
+    res.status(200).json({
+      success:true,
+      message:"Course updated successfully!!!"
+    })
+  } catch (error) {
+    return next(new AppError(error.message,401))
+  }
+};
 export {
   getAllCourses,
   getLectureByCourseId,
