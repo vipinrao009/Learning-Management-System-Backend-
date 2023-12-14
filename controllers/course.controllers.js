@@ -85,10 +85,6 @@ const createCourse = async (req, res, next) => {
   }
 };
 
-const removeCourse = async (req, res, next) => {
-
-};
-
 const updateCourse = async (req, res, next) => {
   const { id } = req.params;
 
@@ -97,26 +93,46 @@ const updateCourse = async (req, res, next) => {
     const course = await Course.findByIdAndUpdate(
       id,
       {
-        $set:req.body //this is only update the fields which are present and remain same (no update)
+        $set: req.body, //this is only update the fields which are present and remain same (no update)
       },
       {
-        runValidators : true // this will run the validation checks on the new data that is right or wrong
+        runValidators: true, // this will run the validation checks on the new data that is right or wrong
       }
     );
 
-    if(!course)
-    {
-      return next(new AppError('course with given id does not exist !!!',401))
+    if (!course) {
+      return next(new AppError("course with given id does not exist !!!", 401));
     }
 
     res.status(200).json({
-      success:true,
-      message:"Course updated successfully!!!"
-    })
+      success: true,
+      message: "Course updated successfully!!!",
+    });
   } catch (error) {
-    return next(new AppError(error.message,401))
+    return next(new AppError(error.message, 401));
   }
 };
+
+const removeCourse = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const course = await Course.findById(id);
+
+    if (!course) {
+      return next(new AppError("course with given id does not exist !!!", 401));
+    }
+
+    await Course.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Course deleted successfully!!!",
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 401));
+  }
+};
+
 export {
   getAllCourses,
   getLectureByCourseId,

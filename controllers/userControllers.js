@@ -5,6 +5,7 @@ import fs from "fs/promises";
 import sendEmail from "../utils/sendEmail.js";
 import crypto from "crypto";
 
+
 const home = (req, res) => {
   res.status(200).json({
     messsage: "This is the home page created by vipin kumar",
@@ -96,7 +97,7 @@ const register = async (req, res, next) => {
   });
 };
 
-const login = async (req, res) => {
+const login = async (req, res,next) => {
   // Destructuring the necessary data from req object
   const { email, password } = req.body;
 
@@ -161,6 +162,21 @@ const logOut = async (req, res) => {
   } catch (error) {
     return next(new AppError(error.messsage), 400);
   }
+};
+
+const logOut2= async (req, res, _next) => {
+  // Setting the cookie value to null
+  res.cookie("token", null, {
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    maxAge: 0,
+    httpOnly: true,
+  });
+
+  // Sending the response
+  res.status(200).json({
+    success: true,
+    message: "User logged out successfully",
+  });
 };
 
 const getUser = async (req, res) => {
