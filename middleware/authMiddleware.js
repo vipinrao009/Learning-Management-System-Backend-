@@ -1,7 +1,7 @@
 import JWT from "jsonwebtoken";
 const isLoggedIn = async (req, res, next) => {
   // extracting token from the cookies
-  const token = req.cookies;
+  const { token } = req.cookies;
 
   // if no token send unauthorized message
   if (!token) {
@@ -9,7 +9,7 @@ const isLoggedIn = async (req, res, next) => {
   }
 
   // Decode the token using JWT packege verify method
-  const userDetails = await JWT.verify("token", process.env.JWT_SECRET);
+  const userDetails = await JWT.verify(token, process.env.JWT_SECRET); //token ko kbhi string me na dale
 
   // If no decode send the message unauthorized
   if (!userDetails) {
