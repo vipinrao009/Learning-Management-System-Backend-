@@ -25,17 +25,17 @@ router.route("/")
 router.route("/course/:id")
   .get(
     isLoggedIn,
-    //authorizedRoles('ADMIN'),
+    authorizedRoles('ADMIN'),
     getLectureByCourseId)
 
   .put(
     isLoggedIn,
-    //authorizedRoles('ADMIN'),
+    authorizedRoles('ADMIN'),
     updateCourse)
 
   .delete(
     isLoggedIn,
-    //authorizedRoles('ADMIN'),
+    authorizedRoles('ADMIN'),
     removeCourse);
 
 export default router;
