@@ -25,7 +25,7 @@ const isLoggedIn = async (req, res, next) => {
 };
 
 export const authorizedRoles = (...roles) => (req,res,next)=>{
-  const currentRoles = req.user.role
+  const currentRoles = req.user.role 
 
   if(!roles.includes(currentRoles))
   {
@@ -35,5 +35,17 @@ export const authorizedRoles = (...roles) => (req,res,next)=>{
   next() // ye na bhulna 
 }
 
+export const authorizedSubscriber = async(req,res,next) =>{
+
+  const currentRoles = await req.user.subscriber;
+  const subscriber = await req.user.subscription;
+
+  if(currentRoles !== 'ADMIN' && subscriber.status !== 'active')
+  {
+    return next(
+      new AppError('Please subscribe to access this routes',403)
+    )
+  }
+}
 
 export default isLoggedIn

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-mongoose.set("strictQuery", false); //strictQuery => if i sent unrelevent data to db then don't throw error
+mongoose.set("strictQuery", false);//strictQuery => if i sent unrelevent data to db then don't throw error
 
 const connectToDB = async () => {
   try {

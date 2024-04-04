@@ -82,8 +82,8 @@ const register = async (req, res, next) => {
 
   const CookieOptions = {
     maxAge: 7 * 24 * 60 * 60 * 1000, //7days
-    httpOnly: true,
-    secure: true,
+    httpOnly:false,
+    secure:true,
   };
 
   //Setting the token in cookie with name token along with cookieOption
@@ -129,6 +129,7 @@ const login = async (req, res,next) => {
     const cookieOptions = {
       maxAge: 7 * 24 * 60 * 60 * 1000, //7days
       httpOnly: true,
+      secure:true
       //I took mistake here that was secure : true
     };
 
@@ -162,21 +163,6 @@ const logOut = async (req, res) => {
   } catch (error) {
     return next(new AppError(error.messsage), 400);
   }
-};
-
-const logOut2= async (req, res, _next) => {
-  // Setting the cookie value to null
-  res.cookie("token", null, {
-    secure: process.env.NODE_ENV === "production" ? true : false,
-    maxAge: 0,
-    httpOnly: true,
-  });
-
-  // Sending the response
-  res.status(200).json({
-    success: true,
-    message: "User logged out successfully",
-  });
 };
 
 const getUser = async (req, res) => {

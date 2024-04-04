@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { strict } from "assert";
 const userSchema = new Schema(
   {
     fullName: {
@@ -46,6 +47,10 @@ const userSchema = new Schema(
     },
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
+    subscription:{
+      id:String,
+      status:String
+    }
   },
   {
     timestamps: true,
@@ -57,7 +62,7 @@ userSchema.pre("save", async function (next) {
   // If password is not modified then do not hash it
   if (!this.isModified("password")) return next();
 
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10); //jo password aa rha hai user ke through use db me save karne se pahle hash kar do
 });
 
 userSchema.methods = {
