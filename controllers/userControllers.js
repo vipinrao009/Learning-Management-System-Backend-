@@ -92,9 +92,10 @@ const register = async (req, res, next) => {
   //If all good then send the response to the fronted
   res.status(200).json({
     success: true,
-    messsage: "User registered successfully!!!!",
+    message: "User registered successfully!!!!",
     user,
   });
+  
 };
 
 const login = async (req, res,next) => {
