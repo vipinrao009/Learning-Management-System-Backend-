@@ -130,7 +130,7 @@ const login = async (req, res,next) => {
     const cookieOptions = {
       maxAge: 7 * 24 * 60 * 60 * 1000, //7days
       httpOnly: true,
-      secure:true
+      secure:false
       //I took mistake here that was secure : true
     };
 
@@ -159,7 +159,7 @@ const logOut = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      messsage: "User logged out successfully !!!",
+      message: "User logged out successfully !!!",
     });
   } catch (error) {
     return next(new AppError(error.messsage), 400);
