@@ -1,11 +1,13 @@
 const app = express();
+// import { config } from "dotenv";
+// config();
 import cookieParser from "cookie-parser";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 
 import connectToDB from "./config/db.connection.js";
-import router from "./routers/userRouters.js";
+import user from "./routers/userRouters.js";
 import course from "./routers/courseRouter.js";
 import payment from "./routers/paymentRouters.js"
 import miscellaneous from "./routers/miscellaneous.route.js"
@@ -18,10 +20,11 @@ app.use(cookieParser());
 app.use(express.urlencoded({extended:true}));
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL],
+    origin: [process.env.FRONTEND_URL,"http://localhost:5173"],
     credentials: true
   })
 );
+
 
 app.use(morgan("dev")); // by this we will know on console what is the user trying to access
 
@@ -29,7 +32,7 @@ app.use(morgan("dev")); // by this we will know on console what is the user tryi
 connectToDB();
 
 
-app.use("/api/v1/user", router);
+app.use("/api/v1/user",user);
 app.use("/api/v1/course",course)
 app.use("/",payment)
 app.use("/api/v1",miscellaneous)
