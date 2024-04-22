@@ -2,54 +2,57 @@ import Payment from "../models/payment.model.js";
 import User from "../models/userModels.js";
 import { razorpay } from "../server.js";
 import AppError from "../utils/error.utils.js";
-
+import crypto from 'crypto';
 // getRazorKey is for fronted
 const getRazorKey = async (req, res, next) => {
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "RAZORPAY API KEY",
-    key: process.env.RAZOR_KEY_ID,
+    key: process.env.RAZORPAY_KEY_ID,
+    
   });
 };
 
+
 const buySubscription = async (req, res, next) => {
-  const { id } = req.user;
+    const { id } = req.user;
 
-  //check the user that is exist in db or not
-  const user = await User.findById(id);
+    //check the user that is exist in db or not
+    const user = await User.findById(id);
 
-  if (!user) {
-    return next(new AppError("Unauthorized, plz login agin", 401));
-  }
+    if (!user) {
+      return next(new AppError("Unauthorized, plz login agin", 401));
+    }
+ 
+    //ADMIN can't purchase the course 
+    if (user.role === "ADMIN") {
+      return next(new AppError("Admin can not purchase a subscription!!!", 401));
+    }
 
-  //ADMIN can't purchase the course 
-  if (user.role === "ADMIN") {
-    return next(new AppError("Admin can not purchase a subscription!!!", 401));
-  }
-
-  try {
     const option = {
-      plan_id: process.env.RAZOR_PLAN_ID,
+      plan_id: process.env.RAZORPAY_PLAN_ID,
       customer_notify: 1, //1 means razorpay will handle notifying the customer, 0 means we will not notify the customer
       total_count: 12, // 12 means it will charge every month for a 1-year sub.
     }
-    
-    const subscription = await razorpay.subscriptions.create(option);
+    console.log({option});
+    try {
+      const subscription = await razorpay.subscriptions.create(option);
+      console.log({subscription});
+      // Adding the ID and the status to the user account
+      user.subscription.id = subscription.id;
+      user.subscription.status = subscription.status;
+      //Finally save all the changes
+      console.log({user});
+      await user.save();
 
-    // Adding the ID and the status to the user account
-    user.subscription.id = subscription.id;
-    user.subscription.status = subscription.status;
 
-    //Finally save all the changes
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: "subscribed successfully",
-      subscription_id: subscription.id,
-    });
+      res.status(200).json({
+        success: true,
+        message: "subscribed successfully",
+        subscription_id: subscription.id,
+      });
   } catch (error) {
-    return next(new AppError(error.message, 401));
+    return next(new AppError(error.message, 408));
   }
 };
 
@@ -57,8 +60,9 @@ const verifySubscription = async (req, res, next) => {
   const { id } = req.user;
 
   const { razorpay_payment_id, razorpay_subscription_id, razorpay_signature } =
-    req.body;
+  req.body;
 
+  console.log(razorpay_payment_id);
   // Finding the user
   const user = await User.findById(id);
 
@@ -68,16 +72,18 @@ const verifySubscription = async (req, res, next) => {
 
   try {
     // Getting the subscription ID from the user object
-    const subscriptionID = user.subscription.id;
+    const subscription_id = user.subscription.id;
+    console.log(subscription_id);
 
     const generateSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_SECRET)
-      .update(`${razorpay_payment_id}|${razorpay_subscription_id}`)
+      .createHmac("sha256", process.env.RAZORPAY_SECRET_KEY)
+      .update(`${razorpay_payment_id}|${subscription_id}`)
       .digest("hex");
-
+    console.log({razorpay_signature});
+    console.log({generateSignature});
     // Check if generated signature and signature received from the frontend is the same or not
     if (generateSignature !== razorpay_signature) {
-      return next(new AppError("Payment not verified", 401));
+      return next(new AppError('Payment not verified, please try again.', 400));
     }
 
     // If they match successfuly then create payment and store it in the DB

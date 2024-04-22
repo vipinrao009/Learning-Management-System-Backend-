@@ -171,7 +171,7 @@ const getUser = async (req, res) => {
 
   try {
     const user = await User.findById(userId);
-
+    console.log(user);
     res.status(200).json({
       success: true,
       messsage: "User Details !!!",
@@ -313,57 +313,6 @@ const changePassword = async (req, res) => {
   })
 };
 
-// const updateProfile = async(req,res) =>{
-//   const {fullName} = req.body;
-//   const {id} = req.params.id
-
-//   const user = await User.findById(id)
-
-//   if(!user){
-//     return next(new AppError("Invalid user id or user does not exist"))
-//   }
-
-//   if(fullName){
-//     user.fullName = fullName
-//   }
-
-//   if(req.file){
-//     // Deletes the old image uploaded by the user
-//     await cloudinary.v2.uploader.destroy(user.avatar.public_id)
-
-//     try {
-//       const result = await cloudinary.v2.uploader.upload(req.file.path,{
-//         folder:"lms",
-//         width:250,
-//         height:250,
-//         gravity:"faces",
-//         crop:"fill"
-//       })
-
-//       // If success
-//       if(result){
-//         // Set the public_id and secure_url in DB
-//         user.avatar.public_id = result.public_id,
-//         user.avatar.secure_url = result.secure_url
-
-//         // After successful upload remove the file from local storage
-//         fs.rm(`uploads/${req.file.filename}`);
-//       }
-//     } catch (error) {
-//       return next(
-//         new AppError(error || "File not uploaded, please try again", 400)
-//       );
-//     }
-    
-//     // Save the user object
-//     user.save();
-//     res.status(200).json({
-//       success: true,
-//       message: "User details updated successfully",
-//     });
-//   }
-// }
-
 const updateProfile  =async (req, res, next) => {
   // Destructuring the necessary data from the req object
   const { fullName } = req.body;
@@ -417,6 +366,7 @@ const updateProfile  =async (req, res, next) => {
     message: "User details updated successfully",
   });
 };
+
 
 export {
   home,

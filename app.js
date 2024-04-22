@@ -25,7 +25,6 @@ app.use(
   })
 );
 
-
 app.use(morgan("dev")); // by this we will know on console what is the user trying to access
 
 // DB connection
@@ -34,7 +33,7 @@ connectToDB();
 
 app.use("/api/v1/user",user);
 app.use("/api/v1/course",course)
-app.use("/",payment)
+app.use("/api/v1/payment",payment)
 app.use("/api/v1",miscellaneous)
 // 3 module are yet to write
 
