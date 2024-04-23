@@ -1,5 +1,6 @@
 import JWT from "jsonwebtoken";
 import AppError from "../utils/error.utils.js";
+import User from "../models/userModels.js";
 
 const isLoggedIn = async (req, res, next) => {
   // extracting token from the cookies
@@ -37,8 +38,11 @@ export const authorizedRoles = (...roles) => (req,res,next)=>{
 
 export const authorizedSubscriber = async(req,res,next) =>{
 
-  const currentRoles = await req.user.subscriber;
-  const subscriber = await req.user.subscription;
+  const user = await User.findById(req.user.id)
+  console.log({user});
+
+  const currentRoles = await user.subscriber;
+  const subscriber = await user.subscription;
 
   if(currentRoles !== 'ADMIN' && subscriber.status !== 'active')
   {
