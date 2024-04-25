@@ -200,8 +200,6 @@ const addLectureById = async (req, res, next) => {
         chunk_size: 50000000, // 50 mb size
         resource_type: 'video',
       });
-      
-      console.log({result});
 
       if (result) {
         // Set the public_id and secure_url in DB
@@ -210,7 +208,7 @@ const addLectureById = async (req, res, next) => {
       }
 
       // After successfully upload remove the file from local storage
-      fs.rm(`upload/${req.file.filename}`);
+      fs.rm(`uploads/${req.file.filename}`);
     } catch (error) {
       return next(new AppError(error.message, 400));
     }
