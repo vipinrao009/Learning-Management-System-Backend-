@@ -1,7 +1,8 @@
 import Course from "../models/course.model.js";
 import AppError from "../utils/error.utils.js";
 import cloudinary from "cloudinary";
-import fs from "fs/promises";
+import fs from 'fs/promises';
+import path from 'path';
 
 const getAllCourses = async (req, res, next) => {
   const course = await Course.find({}).select("-lectures");
@@ -14,8 +15,7 @@ const getAllCourses = async (req, res, next) => {
 };
 
 const getLectureByCourseId = async (req, res, next) => {
-  const { id } = req.params.id; //Note: jab data url ke through aata hai tab ham => req.params.id  , data store karate hai as well as router me bhi batana padta hai ki data url se aa raha hai
-
+  const { id } = req.params 
   const course = await Course.findById(id);
 
   if (!course) {
@@ -114,29 +114,67 @@ const updateCourse = async (req, res, next) => {
 };
 
 const removeCourse = async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const course = await Course.findById(id);
+  // Grabbing the courseId and lectureId from req.query
+  const { courseId, lectureId } = req.query;
 
-    if (!course) {
-      return next(new AppError("course with given id does not exist !!!", 401));
-    }
+  console.log(courseId);
+  console.log(lectureId);
 
-    await Course.findByIdAndDelete(id);
-
-    res.status(200).json({
-      success: true,
-      message: "Course deleted successfully!!!",
-    });
-  } catch (error) {
-    return next(new AppError(error.message, 401));
+  // Checking if both courseId and lectureId are present
+  if (!courseId) {
+    return next(new AppError('Course ID is required', 400));
   }
+
+  if (!lectureId) {
+    return next(new AppError('Lecture ID is required', 400));
+  }
+
+  // Find the course uding the courseId
+  const course = await Course.findById(courseId);
+
+  // If no course send custom message
+  if (!course) {
+    return next(new AppError('Invalid ID or Course does not exist.', 404));
+  }
+
+  // Find the index of the lecture using the lectureId
+  const lectureIndex = course.lectures.findIndex(
+    (lecture) => lecture._id.toString() === lectureId.toString()
+  );
+
+  // If returned index is -1 then send error as mentioned below
+  if (lectureIndex === -1) {
+    return next(new AppError('Lecture does not exist.', 404));
+  }
+
+  // Delete the lecture from cloudinary
+  await cloudinary.v2.uploader.destroy(
+    course.lectures[lectureIndex].lecture.public_id,
+    {
+      resource_type: 'video',
+    }
+  );
+
+  // Remove the lecture from the array
+  course.lectures.splice(lectureIndex, 1);
+
+  // update the number of lectures based on lectres array length
+  course.numberOfLectures = course.lectures.length;
+
+  // Save the course object
+  await course.save();
+
+  // Return response
+  res.status(200).json({
+    success: true,
+    message: 'Course lecture removed successfully',
+  });
 };
 
 const addLectureById = async (req, res, next) => {
   //Extract id from user
   const { title, description } = req.body;
-  const { id } = user.params;
+  const { id } = req.params;
 
   // Check if the data is there or not, if not throw error message
   if (!title || !description) {
@@ -159,7 +197,11 @@ const addLectureById = async (req, res, next) => {
     try {
       const result = await cloudinary.v2.uploader.upload(req.file.path, {
         file: "lms", // Save files in a folder named lms
+        chunk_size: 50000000, // 50 mb size
+        resource_type: 'video',
       });
+      
+      console.log({result});
 
       if (result) {
         // Set the public_id and secure_url in DB
@@ -209,8 +251,8 @@ const addLectureById1 = async (req, res, next) => {
     try {
       const result = await cloudinary.v2.uploader.upload(req.file.path, {
         folder: "lms", // Save files in a folder named lms
-        // chunk_size: 50000000, // 50 mb size
-        // resource_type: 'video',
+        chunk_size: 50000000, // 50 mb size
+        resource_type: 'video',
       });
 
       // If success

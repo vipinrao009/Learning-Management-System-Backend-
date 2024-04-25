@@ -22,13 +22,21 @@ router.route("/")
     isLoggedIn,
     authorizedRoles('ADMIN'),
     upload.single('thumbnail'),
-    createCourse);
+    createCourse)
 
-router.route("/course/:id")
+    .delete(
+      isLoggedIn,
+      authorizedRoles('ADMIN'),
+      removeCourse)
+    
+    
+    
+
+
+router.route("/:id")
   .get(
     isLoggedIn,
     authorizedSubscriber,
-    authorizedRoles('ADMIN'),
     getLectureByCourseId)
 
   .put(
@@ -36,14 +44,14 @@ router.route("/course/:id")
     authorizedRoles('ADMIN'),
     updateCourse)
 
-  .delete(
-    isLoggedIn,
-    authorizedRoles('ADMIN'),
-    removeCourse)
+  // .delete(
+  //   isLoggedIn,
+  //   authorizedRoles('ADMIN'),
+  //   removeCourse)
 
   .post(
     isLoggedIn,
-    authorizedRoles,
+    authorizedRoles('ADMIN'),
     upload.single('lecture'),
     addLectureById
   )
