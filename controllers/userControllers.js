@@ -29,6 +29,7 @@ const register = async (req, res, next) => {
     return next(AppError("Email is already exist !!!", 400));
   }
 
+  // const hashPassword = await bcrypt.hash(password,10)  ||this is not using bcz we have made this in model
   // Create a new user with the given necessary data and save to DB
   const user = await User.create({
     fullName,
@@ -74,6 +75,7 @@ const register = async (req, res, next) => {
 
   //Save the user object
   await user.save();
+  console.log({user});
   
   user.password = undefined;
 
