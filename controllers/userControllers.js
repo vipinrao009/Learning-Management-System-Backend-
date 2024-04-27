@@ -74,7 +74,7 @@ const register = async (req, res, next) => {
 
   //Save the user object
   await user.save();
-
+  
   user.password = undefined;
 
   // generate the token

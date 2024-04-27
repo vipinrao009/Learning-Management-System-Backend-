@@ -7,8 +7,9 @@ import {
   getLectureByCourseId,
   createCourse,
   updateCourse,
-  removeCourse,
-  addLectureById
+  removeLectureFromCourse,
+  addLectureById,
+  deleteCourseById
 } from "../controllers/course.controllers.js";
 import { authorizedRoles } from "../middleware/authMiddleware.js";
 
@@ -27,7 +28,7 @@ router.route("/")
     .delete(
       isLoggedIn,
       authorizedRoles('ADMIN'),
-      removeCourse)
+      removeLectureFromCourse)
     
     
     
@@ -44,10 +45,10 @@ router.route("/:id")
     authorizedRoles('ADMIN'),
     updateCourse)
 
-  // .delete(
-  //   isLoggedIn,
-  //   authorizedRoles('ADMIN'),
-  //   removeCourse)
+  .delete(
+    isLoggedIn,
+    authorizedRoles('ADMIN'),
+    deleteCourseById)
 
   .post(
     isLoggedIn,

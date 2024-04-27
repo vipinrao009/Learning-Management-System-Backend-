@@ -113,7 +113,7 @@ const updateCourse = async (req, res, next) => {
   }
 };
 
-const removeCourse = async (req, res, next) => {
+const removeLectureFromCourse = async (req, res, next) => {
   // Grabbing the courseId and lectureId from req.query
   const { courseId, lectureId } = req.query;
 
@@ -170,6 +170,26 @@ const removeCourse = async (req, res, next) => {
     message: 'Course lecture removed successfully',
   });
 };
+
+const deleteCourseById = async(req,res,next)=>{
+  
+    // Extracting id 
+    const { id } = req.params;
+
+    // Delete the course by its ID
+    const result = await Course.deleteOne({ _id: id });
+
+    // If no course was found to delete
+    if (result.deletedCount === 0) {
+      return next(new AppError('Course with given id does not exist.', 404));
+    }
+
+    // Send the message to the client 
+    res.status(200).json({
+      success: true,
+      message: "Course deleted successfully."
+    });
+}
 
 const addLectureById = async (req, res, next) => {
   //Extract id from user
@@ -228,79 +248,13 @@ const addLectureById = async (req, res, next) => {
   });
 };
 
-const addLectureById1 = async (req, res, next) => {
-  const { title, description } = req.body;
-  const { id } = req.params;
-
-  let lectureData = {};
-
-  if (!title || !description) {
-    return next(new AppError("Title and Description are required", 400));
-  }
-
-  const course = await Course.findById(id);
-
-  if (!course) {
-    return next(new AppError("Invalid course id or course not found.", 400));
-  }
-
-  // Run only if user sends a file
-  if (req.file) {
-    try {
-      const result = await cloudinary.v2.uploader.upload(req.file.path, {
-        folder: "lms", // Save files in a folder named lms
-        chunk_size: 50000000, // 50 mb size
-        resource_type: 'video',
-      });
-
-      // If success
-      if (result) {
-        // Set the public_id and secure_url in array
-        lectureData.public_id = result.public_id;
-        lectureData.secure_url = result.secure_url;
-      }
-
-      // After successful upload remove the file from local storage
-      fs.rm(`uploads/${req.file.filename}`);
-    } catch (error) {
-      // Empty the uploads directory without deleting the uploads directory
-      for (const file of await fs.readdir("uploads/")) {
-        await fs.unlink(path.join("uploads/", file));
-      }
-
-      // Send the error message
-      return next(
-        new AppError(
-          JSON.stringify(error) || "File not uploaded, please try again",
-          400
-        )
-      );
-    }
-  }
-
-  course.lectures.push({
-    title,
-    description,
-    lecture: lectureData,
-  });
-
-  course.numberOfLectures = course.lectures.length;
-
-  // Save the course object
-  await course.save();
-
-  res.status(200).json({
-    success: true,
-    message: "Course lecture added successfully",
-    course,
-  });
-};
 
 export {
   getAllCourses,
   getLectureByCourseId,
   createCourse,
-  removeCourse,
+  removeLectureFromCourse,
   updateCourse,
   addLectureById,
+  deleteCourseById
 };

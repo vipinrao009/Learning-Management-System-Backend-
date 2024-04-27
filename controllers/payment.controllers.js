@@ -186,7 +186,7 @@ const allPayment = async (req, res, next) => {
   //Find all the subscription from razorpay
   const allPayment = await razorpay.subscriptions.all({
     count: count || 10, // If count is sent then use that else default to 10
-    skip: skip ? skip : 0, // // If skip is sent then use that else default to 0
+    //skip: skip ? skip : 0, // // If skip is sent then use that else default to 0
   })
 
   const monthNames = [
@@ -219,7 +219,7 @@ const allPayment = async (req, res, next) => {
     December: 0,
   };
 
-  const monthlyWisePayments = allPayments.items.map((payment) => {
+  const monthlyWisePayments = allPayment.items.map((payment) => {
     // We are using payment.start_at which is in unix time, so we are converting it to Human readable format using Date()
     const monthsInNumbers = new Date(payment.start_at * 1000);
 
