@@ -218,7 +218,7 @@ const forgetPassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: `Reset password token has been sent to ${email} successfully`,
+      message: `Reset password link has been sent to ${email} successfully`,
     });
   } catch (error) {
     //in case email send nhi huaa
@@ -235,6 +235,8 @@ const resetPassword = async (req, res, next) => {
   const { resetToken } = req.params;
 
   const { password } = req.body;
+
+  console.log({password});
 
   const forgotPasswordToken = crypto
     .createHash("sha256")
