@@ -75,8 +75,7 @@ const register = async (req, res, next) => {
 
   //Save the user object
   await user.save();
-  console.log({user});
-  
+
   user.password = undefined;
 
   // generate the token
@@ -170,14 +169,12 @@ const logOut = async (req, res) => {
 
 const getUser = async (req, res) => {
   const userId = req.user.id;
-
   try {
     const user = await User.findById(userId);
-    console.log(user);
     res.status(200).json({
       success: true,
       messsage: "User Details !!!",
-      data: user,
+      user,
     });
   } catch (error) {
     return next(new AppError("Failed to fetched the user data"), 400);
@@ -272,11 +269,11 @@ const resetPassword = async (req, res, next) => {
   });
 };
 
-const changePassword = async (req, res) => {
+const changePassword = async (req, res,next) => {
   // Destructuring the necessary data from the req object
   const { oldPassword, newPassword } = req.body;
 
-  const { id } = req.user.id; // because of the middleware isLoggedIn
+  const id = req.user.id; // because of the middleware isLoggedIn
   
   //compare the password
   if (!oldPassword || !newPassword) {
@@ -286,16 +283,18 @@ const changePassword = async (req, res) => {
   }
 
   //findind the user by id and selecting the password
-  const validUser = await User.findOne({ id }).select("+password");
+  const validUser = await User.findById(id).select("+password");
 
   // user is not valid then send the response
   if (!validUser) {
-    return next(new AppError("Invalid user id or user does not exist!!", 401));
+    return next(
+     new AppError("Invalid user id or user does not exist!!", 401)
+    );
   }
   
   //Check the old password is correct
-  const isPasswordValid = await user.comparePassword(oldPassword)
-  
+  const isPasswordValid = await validUser.comparePassword(oldPassword)
+
   //if old password is not correct then send the response
   if(!isPasswordValid)
   {
@@ -303,13 +302,13 @@ const changePassword = async (req, res) => {
   }
 
   // if old password is valid the update the password
-  user.password = newPassword
+  validUser.password = newPassword
   
   //save the data in db
-  await user.save()
+  await validUser.save()
   
   // Setting the password undefined so that it won't get sent in the response
-  user.password = undefined
+  validUser.password = undefined
 
   res.status(200).json({
     success:true,
