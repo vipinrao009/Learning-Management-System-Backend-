@@ -15,8 +15,8 @@ import { authorizedRoles } from "../middleware/authMiddleware.js";
 
 router.route("/")
    .get(
-    isLoggedIn,
-    authorizedRoles('ADMIN','USER'),
+    // isLoggedIn,
+    // authorizedRoles('ADMIN','USER'),
     getAllCourses)
 
    .post(
