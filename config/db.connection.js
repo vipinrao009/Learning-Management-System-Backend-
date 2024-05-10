@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
+import { config } from "dotenv";
+config();
 
 mongoose.set("strictQuery", false);//strictQuery => if i sent unrelevent data to db then don't throw error
 
 const connectToDB = async () => {
   try {
-    const { connection } = await mongoose.connect(process.env.MONGO_URI || `mongodb://localhost:27017/LMS`);
+    console.log(process.env.MONGO_URI);
+    const { connection } = await mongoose.connect(process.env.MONGO_URI);
 
     if (connection) {
       console.log(`DB is connected ${connection.host}`);

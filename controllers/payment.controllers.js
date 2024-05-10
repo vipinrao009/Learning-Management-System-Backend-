@@ -40,6 +40,7 @@ const buySubscription = async (req, res, next) => {
       // Adding the ID and the status to the user account
       user.subscription.id = subscription.id;
       user.subscription.status = subscription.status;
+      console.log(subscription.id);
 
       //Finally save all the changes
       await user.save();
@@ -72,7 +73,7 @@ const verifySubscription = async (req, res, next) => {
 
   try {
     // Getting the subscription ID from the user object
-    const subscription_id = user.subscription.id;
+    const subscription_id = razorpay_subscription_id//user.subscription.id;
     console.log(subscription_id);
 
     const generateSignature = crypto
@@ -142,30 +143,30 @@ const cancelSubscription = async (req, res, next) => {
   }
 
   // Finding the payment using the subscription ID
-  const payment = await Payment.findOne({
-    razorpay_subscription_id: subscriptionId,
-  });
+  // const payment = await Payment.findOne({
+  //   razorpay_subscription_id: subscriptionId,
+  // });
 
   // Getting the time from the date of successful payment (in milliseconds)
-  const timeSinceSubscribed = Date.now() - payment.createdAt;
+  //const timeSinceSubscribed = Date.now() - payment.createdAt;
 
   // refund period which in our case is 14 days
-  const refundPeriod = 14 * 24 * 60 * 60 * 1000;
+  // const refundPeriod = 14 * 24 * 60 * 60 * 1000;
 
   // Check if refund period has expired or not
-  if (refundPeriod <= timeSinceSubscribed) {
-    return next(
-      new AppError(
-        'Refund period is over, so there will not be any refunds provided.',
-        400
-      )
-    );
-  }
+  // if (refundPeriod <= timeSinceSubscribed) {
+  //   return next(
+  //     new AppError(
+  //       'Refund period is over, so there will not be any refunds provided.',
+  //       400
+  //     )
+  //   );
+  // }
 
   // If refund period is valid then refund the full amount that the user has paid
-  await razorpay.payments.refund(payment.razorpay_payment_id, {
-    speed: 'optimum', // This is required
-  });
+  // await razorpay.payments.refund(payment.razorpay_payment_id, {
+  //   speed: 'optimum', // This is required
+  // });
 
   user.subscription.id = undefined; // Remove the subscription ID from user DB
   user.subscription.status = undefined; // Change the subscription Status in user DB
