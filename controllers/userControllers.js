@@ -82,9 +82,10 @@ const register = async (req, res, next) => {
   const token = await user.generateJWTToken();
 
   const CookieOptions = {
-    maxAge: 7 * 24 * 60 * 60 * 1000, //7days
-    httpOnly:false,
-    secure:true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    httpOnly: true,  // Protects against XSS attacks
+    secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+    sameSite: "none" // Helps prevent CSRF attacks
   };
 
   //Setting the token in cookie with name token along with cookieOption
@@ -129,10 +130,10 @@ const login = async (req, res,next) => {
     user.password = undefined;
 
     const cookieOptions = {
-      maxAge: 7 * 24 * 60 * 60 * 1000, //7days
-      httpOnly: true,
-      secure:false
-      //I took mistake here that was secure : true
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      httpOnly: true,  // Protects against XSS attacks
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: "none" // Helps prevent CSRF attacks
     };
 
     // Setting the token in the cookie with name token along with cookieOptions
